@@ -1,189 +1,71 @@
 # Payment Processing Microservice
 
-A production-grade, asynchronous payment processing microservice built with **Node.js (v22)**, **TypeScript**, and **Express**. Designed with database-first architecture principles, strict idempotency enforcement, state-machine transaction integrity, and structured failure handling.
+A production-grade, asynchronous payment processing microservice built with Node.js, TypeScript, and Express. Designed with a strict vertical feature-sliced architecture, zero non-essential dependencies to mitigate supply chain risks, bulletproof idempotency enforcement, and native Node test runner execution.
 
 ---
 
 ## Key Features
 
-* **Layered Architecture:** Strict separation of concerns (Controller $\rightarrow$ Service $\rightarrow$ Repository pattern) for high maintainability and testability.
-* **Idempotent Payment Engine:** Built-in protection against duplicate charge attempts using client-provided idempotency keys.
-* **State Machine Validation:** Rigid state machine preventing illegal payment state mutations (e.g., transitioning from `SUCCESS` to `PENDING`).
-* **Asynchronous Gateway Simulation:** Non-blocking background worker simulation for payment settlement, failure state handling, and retry flows.
-* **Comprehensive Error Handling:** Centralized RFC-7807 compliant error handler with structured JSON logging (`Winston`).
-* **API Security & Rate Limiting:** Equipped with `Helmet` header security, CORS controls, input sanitization (`Zod`), and configurable endpoint rate limiting.
-* **OpenAPI / Swagger Documentation:** Self-documenting API interactive endpoints.
-
----
-
-## System Architecture
-
-```text
-               ┌────────────────────────┐
-               │    HTTP Client / App   │
-               └───────────┬────────────┘
-                           │
-                           ▼
-          ┌──────────────────────────────────┐
-          │  Middlewares (RateLimit, Zod)   │
-          └────────────────┬─────────────────┘
-                           │
-                           ▼
-          ┌──────────────────────────────────┐
-          │        Payment Controller        │
-          └────────────────┬─────────────────┘
-                           │
-                           ▼
-          ┌──────────────────────────────────┐
-          │         Payment Service          │
-          │  (State Machine & Idempotency)   │
-          └────────┬─────────────────┬───────┘
-                   │                 │
-                   ▼                 ▼
- ┌────────────────────────┐   ┌───────────────────────────────┐
- │   Payment Repository   │   │ Async Background Payment      │
- │ (In-Memory / Database) │   │ Worker / Gateway Simulation   │
- └────────────────────────┘   └───────────────────────────────┘
-```
-
----
-
-## State Machine Workflow
-
-```text
-    ┌──────────┐
-    │ PENDING  │
-    └────┬─────┘
-         │
-         ▼
-  ┌─────────────┐
-  │ PROCESSING  │
-  └──────┬──────┘
-         ├────────────────────────┐
-         ▼                        ▼
-  ┌─────────────┐          ┌─────────────┐
-  │   SUCCESS   │          │   FAILED    │
-  └─────────────┘          └─────────────┘
-```
+- **Zero-Vulnerability Toolchain:** Stripped out legacy tooling (jest, ts-jest, ts-node-dev, zod, winston) in favor of native Node primitives (crypto.randomUUID(), node --test, native structured logger, and pure TypeScript validation guards).
+- **Vertical Feature-Sliced Architecture:** Self-contained domain modules (src/features/payments) housing models, repository contracts, use cases, controllers, and routes in a single cohesive unit.
+- **Idempotent Payment Engine:** Built-in protection against duplicate charge attempts using client-provided idempotency keys mapped securely in memory.
+- **Asynchronous Gateway Simulation:** Non-blocking background worker simulation handling state transitions (PENDING -> PROCESSING -> SUCCESS or FAILED) without blocking the main event loop.
+- **Native Test Suite Integration:** Fast, zero-warning integration tests utilizing Supertest and Node.js's built-in test runner (node --test).
 
 ---
 
 ## Prerequisites
 
-* **Node.js:** `v22.x` or higher
-* **npm:** `v10.x` or higher
-* **Docker & Docker Compose:** Required for containerized deployment
+- **Node.js:** v20.x or v22.x recommended
+- **npm:** v10.x or higher
 
 ---
 
 ## Local Development Setup
 
-### Option 1: Native Node.js Environment
-
-1. **Clone the Repository:**
-   ```bash
+1. Clone the Repository:
    git clone https://github.com/your-username/payment-processing-service.git
    cd payment-processing-service
-   ```
 
-2. **Environment Configuration:**
-   Copy the example environment file:
-   ```bash
-   cp .env.example .env
-   ```
-
-3. **Install Dependencies:**
-   ```bash
+2. Install Dependencies (Zero Vulnerabilities):
    npm install
-   ```
 
-4. **Run in Development Mode:**
-   ```bash
+3. Run in Development Mode:
    npm run dev
-   ```
-   The service will start at `http://localhost:3000`.
-
----
-
-### Option 2: Docker Deployment
-
-1. **Build and Run Containers:**
-   ```bash
-   docker-compose up --build -d
-   ```
-
-2. **Verify Container Status:**
-   ```bash
-   docker-compose ps
-   ```
-
-3. **View Logs:**
-   ```bash
-   docker-compose logs -f app
-   ```
+   (The service will start at http://localhost:3000)
 
 ---
 
 ## API Documentation & Endpoints
 
-Interactive Swagger UI documentation is available locally at:
-`http://localhost:3000/api-docs`
-
 ### Summary of Core Endpoints
 
 | Method | Endpoint | Description | Idempotent |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/v1/payments` | Create a new payment simulation | **Yes** (via `X-Idempotency-Key` or body key) |
-| `GET` | `/api/v1/payments/:id` | Retrieve payment details by ID | **Yes** |
-| `PATCH` | `/api/v1/payments/:id/status` | Update payment status explicitly | **No** |
-| `GET` | `/health` | Service health & uptime status | **Yes** |
-
----
-
-## Error Handling & Response Structure
-
-All error responses return standard HTTP status codes and structured JSON outputs:
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INVALID_STATE_TRANSITION",
-    "message": "Cannot transition payment from SUCCESS to PENDING",
-    "details": [],
-    "timestamp": "2026-10-15T19:00:00.000Z"
-  }
-}
-```
+| POST | /api/v1/payments | Create a new payment simulation | Yes (via idempotencyKey in body) |
+| GET | /api/v1/payments/:id | Retrieve payment details by ID | Yes |
+| PATCH | /api/v1/payments/:id/status | Update payment status explicitly | No |
+| GET | /health | Service health & uptime status | Yes |
 
 ---
 
 ## Testing
 
-The project includes unit, integration, and failure-scenario test suites written using **Jest** and **Supertest**.
+The project uses Node.js's native test runner (node --test) paired with tsx and supertest for zero-warning integration testing.
 
-```bash
-# Run all tests
+Run the test suite:
 npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Generate test coverage report
-npm run test:coverage
-```
 
 ---
 
-## Security & Resilience Controls
+## Security & Supply Chain Resilience
 
-* **Idempotency Keys:** Protects payment submission endpoints from double-charge vulnerabilities due to network retries.
-* **Graceful Shutdown:** Intercepts `SIGTERM`/`SIGINT` signals to finish pending background database writes before termination.
-* **Rate Limiting:** Prevents Denial of Service (DoS) and brute-force abuse.
-* **Input Validation:** Strict type-checking using `Zod` schemas before payload reaches business logic.
+- **Zero Non-Essential Dependencies:** Eliminates transitive supply chain vulnerabilities by avoiding heavy validation, logging, and testing libraries.
+- **Graceful Shutdown:** Intercepts SIGTERM/SIGINT signals to close the HTTP server cleanly before process termination.
+- **Runtime Validation:** Strict pure TypeScript guard functions validate payloads before execution, preventing malformed inputs.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
