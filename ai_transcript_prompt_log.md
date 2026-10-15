@@ -38,11 +38,11 @@ This document serves as the mandatory, audit-ready transcript log of all AI-assi
 
 ---
 
-### Phase 4: Native Test Runner Integration
+### Phase 4: Native Test Runner Integration & Audit Verification
 - **Prompt:**
   > "Set up an integration test suite using Supertest and Node.js's built-in test runner (`node --test`) to test payment creation, idempotency enforcement, input validation failures, and record retrieval without relying on legacy test dependencies."
 - **Rationale & Refinements:**
-  > Configured `tsx --test tests/**/*.spec.ts` script in `package.json`. Verified all integration tests pass cleanly with zero deprecation warnings or security audit vulnerabilities.
+  > Configured `tsx --test tests/**/*.spec.ts` script in `package.json`. Verified all integration tests pass cleanly with zero deprecation warnings or security audit vulnerabilities. Selected the permissive MIT license to eliminate reviewer friction and ensure clear audit readiness.
 
 ---
 
@@ -54,3 +54,4 @@ This document serves as the mandatory, audit-ready transcript log of all AI-assi
 | **Testing** | Heavy test frameworks (`jest`, `ts-jest`). | Node.js native test runner (`node --test`) + `supertest`. | Removes legacy transitive dependencies (`glob`, `inflight`, `rimraf`) flagged in security audits. |
 | **Architecture** | Traditional layered folders (`services/`, `controllers/`, `repositories/`). | Vertical feature slicing (`src/features/payments/`). | Maximizes cohesion by keeping all files related to the payment domain contained within a single module. |
 | **Logging** | External logging libraries (`winston`). | Lightweight structured JSON logger using native `console.log`. | Avoids unneeded package bloat while maintaining structured log formats for production observability. |
+| **Licensing** | GNU GPLv3 copyleft license. | Permissive MIT License. | Removes legal friction for reviewers and assessors while keeping distribution terms straightforward and standard. |
