@@ -24,7 +24,7 @@ A production-grade, asynchronous payment processing microservice built with Node
 ## Local Development Setup
 
 1. Clone the Repository:
-   git clone https://github.com/your-username/payment-processing-service.git
+   git clone https://github.com/okezieobi/payment-processing-service.git
    cd payment-processing-service
 
 2. Install Dependencies (Zero Vulnerabilities):
