@@ -1,4 +1,4 @@
-import express, { Express, Request, Response, NextFunction } from 'express';
+import express, { Express, Request, Response, NextFunction, Router } from 'express';
 import { paymentRouter } from './features/payments/payment.routes';
 import { logger } from './utils/logger';
 
@@ -23,7 +23,11 @@ app.get('/health', (_req: Request, res: Response) => {
     res.status(200).json({ status: 'UP', timestamp: new Date().toISOString() });
 });
 
-app.use('/api/v1/payments', paymentRouter);
+const v1Router = Router()
+
+v1Router.use("/payments", paymentRouter)
+
+app.use('/api/v1', v1Router);
 
 app.use((_req: Request, res: Response) => {
     res.status(404).json({ error: 'Route not found' });
