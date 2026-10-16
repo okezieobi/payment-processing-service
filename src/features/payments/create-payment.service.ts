@@ -9,7 +9,7 @@ interface CreatePaymentInput {
     description?: string;
 }
 
-export class CreatePaymentUseCase {
+export class CreatePaymentsService {
     constructor(private paymentRepo: IPaymentRepository) { }
 
     async execute(input: CreatePaymentInput): Promise<{ payment: Payment; isDuplicate: boolean }> {

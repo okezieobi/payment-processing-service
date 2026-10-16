@@ -2,7 +2,7 @@ import { Payment, PaymentStatus } from './payment.model';
 import { IPaymentRepository } from './payment.repository.interface';
 import { logger } from '../../utils/logger';
 
-export class UpdatePaymentStatusUseCase {
+export class UpdatePaymentStatusService {
     constructor(private paymentRepo: IPaymentRepository) { }
 
     async execute(id: string, status: PaymentStatus, failureReason?: string): Promise<Payment | null> {

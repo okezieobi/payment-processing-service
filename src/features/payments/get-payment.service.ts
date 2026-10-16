@@ -1,7 +1,7 @@
 import { Payment } from './payment.model';
 import { IPaymentRepository } from './payment.repository.interface';
 
-export class GetPaymentUseCase {
+export class GetPaymentService {
     constructor(private paymentRepo: IPaymentRepository) { }
 
     async execute(id: string): Promise<Payment | null> {

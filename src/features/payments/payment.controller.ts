@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
-import { CreatePaymentUseCase } from './create-payment.usecase';
-import { GetPaymentUseCase } from './get-payment.usecase';
+
+import { GetPaymentService } from './get-payment.service';
 import { paymentRepository } from './in-memory-payment.repository';
 import { validateCreatePayment, validateUpdateStatus } from './payment.validator';
-import { UpdatePaymentStatusUseCase } from './update-payment-usecase';
+import { UpdatePaymentStatusService } from './update-payment.service';
+import { CreatePaymentsService } from './create-payment.service';
 
 
-const createUseCase = new CreatePaymentUseCase(paymentRepository);
-const getUseCase = new GetPaymentUseCase(paymentRepository);
-const updateUseCase = new UpdatePaymentStatusUseCase(paymentRepository);
+const createService = new CreatePaymentsService(paymentRepository);
+const getService = new GetPaymentService(paymentRepository);
+const updateService = new UpdatePaymentStatusService(paymentRepository);
 
 export class PaymentController {
     async create(req: Request, res: Response): Promise<void> {
@@ -18,12 +19,12 @@ export class PaymentController {
             return;
         }
 
-        const { payment, isDuplicate } = await createUseCase.execute(validation.data!);
+        const { payment, isDuplicate } = await createService.execute(validation.data!);
         res.status(isDuplicate ? 200 : 201).json({ data: payment });
     }
 
     async getById(req: Request, res: Response): Promise<void> {
-        const payment = await getUseCase.execute(req.params.id);
+        const payment = await getService.execute(req.params.id);
         if (!payment) {
             res.status(404).json({ error: 'Payment not found' });
             return;
@@ -38,7 +39,7 @@ export class PaymentController {
             return;
         }
 
-        const updated = await updateUseCase.execute(
+        const updated = await updateService.execute(
             req.params.id,
             validation.data!.status,
             validation.data!.failureReason
