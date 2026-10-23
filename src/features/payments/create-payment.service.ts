@@ -1,6 +1,8 @@
+import crypto from 'node:crypto';
 import { Payment, PaymentStatus, Currency } from './payment.model';
 import { IPaymentRepository } from './payment.repository.interface';
 import { logger } from '../../utils/logger';
+import { PayloadMismatchError } from '../../errors';
 
 interface CreatePaymentInput {
     amount: number;
@@ -12,9 +14,27 @@ interface CreatePaymentInput {
 export class CreatePaymentsService {
     constructor(private paymentRepo: IPaymentRepository) { }
 
+    private hashPayload(input: CreatePaymentInput): string {
+        return crypto
+            .createHash('sha256')
+            .update(JSON.stringify({
+                amount: input.amount,
+                currency: input.currency,
+                description: input.description
+            }))
+            .digest('hex');
+    }
+
     async execute(input: CreatePaymentInput): Promise<{ payment: Payment; isDuplicate: boolean }> {
         const existing = await this.paymentRepo.findByIdempotencyKey(input.idempotencyKey);
+        const currentHash = this.hashPayload(input);
+
         if (existing) {
+            if (existing.payloadHash && existing.payloadHash !== currentHash) {
+                logger.warn('Idempotency key reused with mismatched payload', { key: input.idempotencyKey });
+                throw new PayloadMismatchError('Idempotency key already used with a different request payload');
+            }
+
             logger.info('Idempotent request matched existing payment', { paymentId: existing.id, key: input.idempotencyKey });
             return { payment: existing, isDuplicate: true };
         }
@@ -26,6 +46,7 @@ export class CreatePaymentsService {
             currency: input.currency,
             status: PaymentStatus.PENDING,
             description: input.description,
+            payloadHash: currentHash,
             createdAt: new Date(),
             updatedAt: new Date(),
         };

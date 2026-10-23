@@ -20,6 +20,7 @@ export interface Payment {
     currency: Currency;
     status: PaymentStatus;
     description?: string;
+    payloadHash?: string;
     failureReason?: string;
     createdAt: Date;
     updatedAt: Date;
