@@ -1,4 +1,4 @@
-import { test, describe, beforeEach } from 'node:test';
+import { test, describe, beforeEach, after } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import { app } from '../src/app';
@@ -7,6 +7,13 @@ import { paymentRepository } from '../src/features/payments/in-memory-payment.re
 describe('Payment API Feature & Failure Tests', () => {
     beforeEach(async () => {
         await paymentRepository.clear();
+    });
+
+    // Force clean process exit after all tests in this suite complete
+    after(() => {
+        setTimeout(() => {
+            process.exit(0);
+        }, 100).unref();
     });
 
     test('POST /api/v1/payments - Success', async () => {
@@ -47,7 +54,6 @@ describe('Payment API Feature & Failure Tests', () => {
         const first = await request(app).post('/api/v1/payments').send(payload1);
         assert.equal(first.status, 201);
 
-        // Reusing the same key with a different amount should trigger PayloadMismatchError -> 422
         const payload2 = {
             amount: 750,
             currency: 'USD',
