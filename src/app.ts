@@ -7,17 +7,19 @@ export const app: Express = express();
 
 app.use(express.json());
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-    const start = Date.now();
-    res.on('finish', () => {
-        logger.info('HTTP Request', {
-            method: req.method,
-            path: req.originalUrl,
-            statusCode: res.statusCode,
-            durationMs: Date.now() - start,
-        });
-    });
-    next();
+// src/app.ts
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    // Duck-typing status code with fallback
+    const statusCode = typeof err.statusCode === 'number' ? err.statusCode : 400;
+    const message = err.message || 'Internal Server Error';
+
+    if (statusCode < 500) {
+        logger.warn('Operational Error', { statusCode, message });
+    } else {
+        logger.error('Unhandled Internal Error', { error: message, stack: err.stack });
+    }
+
+    res.status(statusCode).json({ error: message });
 });
 
 app.get('/health', (_req: Request, res: Response) => {
